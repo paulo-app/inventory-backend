@@ -69,14 +69,14 @@ public class CategoryServiceImpl implements ICategoryService {
     @Override
     @Transactional
     public ResponseEntity<CategoryResponseRest> save(Category category) {
-        
+
         CategoryResponseRest response = new CategoryResponseRest();
         List<Category> list = new ArrayList<>();
 
         try {
-            
+
             Category categorySaved = categoryDao.save(category);
-            
+
             if (categorySaved != null) {
                 list.add(categorySaved);
                 response.getCategoryResponse().setCategories(list);
@@ -92,27 +92,27 @@ public class CategoryServiceImpl implements ICategoryService {
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<>(response, HttpStatus.OK);        
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @Override
     @Transactional
     public ResponseEntity<CategoryResponseRest> update(Category category, Long id) {
-        
+
         CategoryResponseRest response = new CategoryResponseRest();
         List<Category> list = new ArrayList<>();
 
         try {
             // Primero buscarmos por ID para saber si existe la Categoria
             Optional<Category> categorySearch = categoryDao.findById(id);
-            
+
             if (categorySearch.isPresent()) {
                 // Se procedera a actuzliar el registro
                 categorySearch.get().setName(category.getName());
                 categorySearch.get().setDescription(category.getDescription());
-                
+
                 Category categoryToUpdate = categoryDao.save(categorySearch.get());
-                
+
                 if (categoryToUpdate != null) {
                     list.add(categoryToUpdate);
                     response.getCategoryResponse().setCategories(list);
@@ -121,19 +121,48 @@ public class CategoryServiceImpl implements ICategoryService {
                     response.setMetadata("Respuesta Nok", "-1", "Categoria no actualizada");
                     return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
                 }
-                
+
             } else {
                 // Si o existe, informar al usuario
                 response.setMetadata("Respuesta Nok", "-1", "Categoria no encontrada");
                 return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
             }
-            
+
         } catch (Exception e) {
             response.setMetadata("Respuesta Nok", "-1", "Error al actualizar Categoria");
             e.getStackTrace();
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<>(response, HttpStatus.OK);  
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @Override
+    @Transactional
+    public ResponseEntity<CategoryResponseRest> deleteById(Long id) {
+
+        CategoryResponseRest response = new CategoryResponseRest();
+
+        try {
+            // Primero buscamos el ID para saber si existe y poder controlar mejor
+            Optional<Category> categorySearch = categoryDao.findById(id);
+            
+            if (categorySearch.isPresent()) {
+                // Si existe el id, entoces lo borramos
+                categoryDao.deleteById(id);
+                response.setMetadata("Respuesta ok", "00", "Registro eliminado");
+            } else {
+                // Si o existe, informar al usuario
+                response.setMetadata("Respuesta Nok", "-1", "Id " + id + " no encontrado en la BD");
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);                
+            }            
+
+        } catch (Exception e) {
+            response.setMetadata("Respuesta Nok", "-1", "Error al eliminar");
+            e.getStackTrace();
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
